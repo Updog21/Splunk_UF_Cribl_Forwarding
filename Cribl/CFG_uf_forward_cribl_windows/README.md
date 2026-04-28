@@ -30,6 +30,22 @@ Configure a Splunk Universal Forwarder (Windows) to securely forward data to Cri
    - In `[tcpout:cribl]` (and/or `[tcpout:splunk]` if you add it), uncomment `clientCert = ...` and set `sslPassword = <passphrase>` if the key is encrypted.
 5. **Deploy**: Copy the entire `CFG_uf_forward_cribl_windows` directory to `%SPLUNK_HOME%\etc\apps\` on the UF and restart the Splunk Universal Forwarder service.
 
+## Environment-specific settings to update
+- **Cribl targets (hosts and ports)**
+  - Edit `default/outputs.conf` in `[tcpout:cribl]` and set `server = cribl-worker1.example.com:9997, cribl-worker2.example.com:9997` to match your Cribl workers/receiver(s).
+  - You can specify a comma-separated list for load balancing/failover.
+  - Keep `useSSL = true`, `sslVerifyServerCert = true`, and `sslVerifyServerName = true` unless you are testing. Ensure the FQDNs you use match the CN/SAN on the server certificates.
+  - Adjust the port if your Cribl receiver listens on a non-default port.
+- **Splunk indexer targets (optional)**
+  - If you plan to forward directly to Splunk as well, update `server =` under `[tcpout:splunk]` with your indexers.
+  - Consider `compressed = false` to avoid double compression, depending on your pipeline.
+- **Default output group**
+  - Under `[tcpout]`, uncomment `defaultGroup = cribl`, `defaultGroup = splunk`, or `defaultGroup = cribl,splunk` for dual-output. Dual-output duplicates events to both.
+- **mTLS (optional)**
+  - Place the client cert+key PEM at `certs\client\client_cert.pem`, then uncomment `clientCert = ...` in the relevant group(s) and set `sslPassword = <passphrase>` if the key is encrypted.
+- **CA trust**
+  - Put your CA bundle at `certs\ca\ca_cert.pem`. If you use a different path/name, update `sslRootCAPath` in `server.conf` (preferably in `local/server.conf`).
+
 ## Validate
 - From a Splunk UF admin CLI:
   ```powershell
